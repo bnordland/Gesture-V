@@ -36,18 +36,24 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include "math.h"
+
+// Need PI defined for some sensor calculations
+#ifndef M_PI
+#    define M_PI 3.14159265358979323846
+#endif
 
 // Include the NordicSDK
 #include "NordicSDK.h"
 
 // Glove service Includes
-#include "Service/Service_Glove.h"
+#include "Service_Glove.h"
 
 // Hardware pin locations
 #include "Config_Hardware.h"
 
-// Include SPI communication // TODO: will be moved to the accelgyro
-#include "Comm/Comm_SPI.h"
+// Include Sensors
+#include "Sensors_AccelGyro.h"
 
 // Global Constants
 #define DEVICE_NAME                      "Glove"                                    // Name of the bluetooth device
@@ -58,6 +64,7 @@
 // Global Variables
 static uint16_t  mConnectionHandle = BLE_CONN_HANDLE_INVALID;   // Bluetooth stack connection handle
 APP_TIMER_DEF(mTimerId); // The timer
+static Sensors_Accel_Data_t accel_data; // accelerometer data
 
 // Function Definitions
     // Functions Required for Setup
@@ -112,17 +119,7 @@ int main(void)
     nrf_gpio_pin_clear(HDW_CONFIG_ONBOARD_LED_PIN);
 
     // Initialize Accelerometer via SPI
-    Comm_SPI_Init(); // init SPI interface
-
-    // Wait for accelerometer SPI device to become active.
-    uint8_t txByte = 0x8F;
-    uint8_t rxByte = 0x00;
-    while(rxByte != 0x69)
-    {
-        Comm_SPI_Transfer(&txByte, 1, &rxByte, 1);
-    }
-
-    // Todo: enable accelerometer
+    Sensors_AccelGyro_Init();
 
     // Start execution of bluetooth and timers
     pStartTimers();
@@ -134,6 +131,8 @@ int main(void)
     // interrupts and timers
     while(1)
     {
+        // TODO: we should also be using a complimentary filter and gyroscope data.
+        Sensors_AccelGyro_GetAccelerometerData(&accel_data); // TODO: probably want to move this to a timer
         // Perform device power management
         uint32_t err_code = sd_app_evt_wait();
         APP_ERROR_CHECK(err_code);
@@ -159,9 +158,9 @@ static void pMainTimerHandler(void * p_context)
     {
         // If we have a connection, the LED is solid
         nrf_gpio_pin_clear(HDW_CONFIG_ONBOARD_LED_PIN);
-        /*int32_t val = (int32_t)m_rx_buf[1];
-        Service_Glove_SetAngleRoll(&val);*/
-        // TODO: replace with SPI
+
+        int16_t pitch = atan2(-accel_data.xData, sqrt(accel_data.yData*accel_data.yData + accel_data.zData*accel_data.zData)) * 180/M_PI;
+        Service_Glove_SetAnglePitch(&pitch);
     }
     else
     {

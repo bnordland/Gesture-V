@@ -12,6 +12,8 @@
 # | Flag    | (DDMYY)  | Author     | Description                          | #
 # |---------|----------|------------|--------------------------------------  #
 # | None    | 12Mar17  | BNordland  | Initial creation                     | #
+# | @01a	| 09Apr17  | BNordland  | Added Accelerometer & Additional     | #
+# |			|		   |		    | Include folders.					   | #
 #  ------------------------------------------------------------------------  #
 ##############################################################################
 
@@ -35,14 +37,21 @@ $(OUTPUT_DIRECTORY)/nrf51422_xxac.out: \
   LINKER_SCRIPT  := ble_app_gcc_nrf51.ld
   
 # Source files for our system
+# @01a add Sensors_AccelGyro.c
 SRC_FILES += \
   main.c \
   Service/Service_Glove.c \
   Comm/Comm_SPI.c \
+  Sensors/Sensors_AccelGyro.c 
   
+# Include folders for our system
+# @01a add Folders for easier including (Comm, Sensors, Service) folders
 INC_FOLDERS += \
   . \
   Config \
+  Comm \
+  Sensors \
+  Service 
   
 # Source files for NRF SDK
 SRC_FILES += \

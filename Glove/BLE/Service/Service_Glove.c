@@ -25,7 +25,7 @@
 #include "app_error.h"
 
 // 16-bit characteristic UUIDs
-#define BLE_UUID_GLOVE_ANGLEROLL_CHARACTERISTC_UUID          0x1001 // Glove Service AngleRoll Characterstic
+#define BLE_UUID_GLOVE_ANGLEPITCH_CHARACTERISTC_UUID          0x1001 // Glove Service AnglePitch Characterstic
 #define BLE_UUID_GLOVE_THROTTLE_CHARACTERISTC_UUID          0x10A0 // Glove Service Throttle Characterstic
 #define BLE_UUID_GLOVE_DIRECTION_CHARACTERISTC_UUID          0x10A1 // Glove Service Direction Characterstic
 
@@ -34,7 +34,7 @@ typedef struct
 {
     uint16_t    conn_handle;         // Current Connection Handle -> provided by bluetooth stack.
     uint16_t    service_handle;      // Handle for the Glove Service -> provided by the bluetooth stack.
-    ble_gatts_char_handles_t angleRoll_char_handles; // Handle for the roll characteristic
+    ble_gatts_char_handles_t anglePitch_char_handles; // Handle for the pitch characteristic
     ble_gatts_char_handles_t direction_char_handles; // Handle for the direction characteristic
     ble_gatts_char_handles_t throttle_char_handles; // Handle for the throttle characteristic
 } Service_Glove_t;
@@ -119,16 +119,16 @@ bool Service_Glove_IsConnected()
 }
 
 /*****************************************************************************
- * Description: Updates the AngleRoll Characteristic and sends it to         *
+ * Description: Updates the AnglePitch Characteristic and sends it to         *
  *              connected bluetooth device                                   *
  *                                                                           *
  * Returns: None                                                             *
  *                                                                           *
  * Parameters:                                                               *
- *      int32_t *angleRoll - The Roll angle of the glove                     *
+ *      int16_t *anglePitch - The Pitch angle of the glove                     *
  *                                                                           *
  *****************************************************************************/
-void Service_Glove_SetAngleRoll(int32_t *angleRoll)
+void Service_Glove_SetAnglePitch(int16_t *anglePitch)
 {
     // Update characteristic value
     if (mGloveService.conn_handle != BLE_CONN_HANDLE_INVALID)
@@ -137,11 +137,11 @@ void Service_Glove_SetAngleRoll(int32_t *angleRoll)
         ble_gatts_hvx_params_t hvx_params;
         memset(&hvx_params, 0, sizeof(hvx_params));
 
-        hvx_params.handle = mGloveService.angleRoll_char_handles.value_handle;
+        hvx_params.handle = mGloveService.anglePitch_char_handles.value_handle;
         hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
         hvx_params.offset = 0;
         hvx_params.p_len  = &len;
-        hvx_params.p_data = (uint8_t*)angleRoll;
+        hvx_params.p_data = (uint8_t*)anglePitch;
 
         sd_ble_gatts_hvx(mGloveService.conn_handle, &hvx_params);
     }
@@ -159,9 +159,9 @@ void Service_Glove_SetAngleRoll(int32_t *angleRoll)
  *****************************************************************************/
 uint32_t pAddCharacteristics()
 {
-    // Add the AngleRoll characteristic and set the initial value to 0
-    uint8_t angleRollValue[2]            = {0x00,0x00};
-    pAddCharacteristicImpl(BLE_UUID_GLOVE_ANGLEROLL_CHARACTERISTC_UUID, "AngleRoll",2, 2, angleRollValue, &mGloveService.angleRoll_char_handles);
+    // Add the AnglePitch characteristic and set the initial value to 0
+    uint8_t anglePitchValue[2]            = {0x00,0x00};
+    pAddCharacteristicImpl(BLE_UUID_GLOVE_ANGLEPITCH_CHARACTERISTC_UUID, "AnglePitch",2, 2, anglePitchValue, &mGloveService.anglePitch_char_handles);
 
     // Add the Direction characteristic and set the initial value to 0
     uint8_t DirectionValue[1]            = {0x00};

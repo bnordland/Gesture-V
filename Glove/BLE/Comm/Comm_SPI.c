@@ -14,6 +14,7 @@
 * | Flag    | (DDMYY)  | Author     | Description                         |  *
 * |---------|----------|------------|-------------------------------------   *
 * | None    | 08Apr17  | BNordland  | Initial creation                    |  *
+* | @01     | 09Apr17  | BNordland  | Allow write only mode               |  *
 *  ------------------------------------------------------------------------  *
 ******************************************************************************/
 
@@ -95,8 +96,11 @@ void Comm_SPI_Transfer(uint8_t * txBuffer, uint8_t txBytes, uint8_t * rxBuffer, 
             __WFE();
         }
 
-        // copy from our static buffer into the receive buffer
-        memcpy(rxBuffer, &mRxBuffer[txBytes],rxBytes);
+        if(rxBytes > 0) // @01a - check before copying that we have at least 1 byte of received data
+        {
+            // copy from our static buffer into the receive buffer
+            memcpy(rxBuffer, &mRxBuffer[txBytes],rxBytes);
+        }
     }
     // TODO: we should throw an error here in the else clause
 }

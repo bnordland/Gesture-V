@@ -67,15 +67,15 @@ void Service_Glove_Init();
 bool Service_Glove_IsConnected();
 
 /*****************************************************************************
- * Description: Updates the AngleRoll Characteristic and sends it to         *
+ * Description: Updates the AnglePitch Characteristic and sends it to         *
  *              connected bluetooth device                                   *
  *                                                                           *
  * Returns: None                                                             *
  *                                                                           *
  * Parameters:                                                               *
- *      int32_t *angleRoll - The Roll angle of the glove                     *
+ *      int16_t *anglePitch - The Pitch angle of the glove                     *
  *                                                                           *
  *****************************************************************************/
-void Service_Glove_SetAngleRoll(int32_t *angleRoll);
+void Service_Glove_SetAnglePitch(int16_t *anglePitch);
 
 #endif  /* _ SERVICE_GLOVE_H__ */
