@@ -78,4 +78,28 @@ bool Service_Glove_IsConnected();
  *****************************************************************************/
 void Service_Glove_SetAnglePitch(int16_t *anglePitch);
 
+/*****************************************************************************
+ * Description: Updates the Throttle Characteristic and sends it to          *
+ *              connected bluetooth device                                   *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters:                                                               *
+ *      uint8_t *throttle - The throttle value of the glove                  *
+ *                                                                           *
+ *****************************************************************************/
+void Service_Glove_SetThrottle(uint8_t *throttle);
+
+/*****************************************************************************
+ * Description: Updates the Direction Characteristic and sends it to         *
+ *              connected bluetooth device                                   *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters:                                                               *
+ *      uint8_t *throttle - The throttle value of the glove                  *
+ *                                                                           *
+ *****************************************************************************/
+void Service_Glove_SetDirection(uint8_t *direction);
+
 #endif  /* _ SERVICE_GLOVE_H__ */

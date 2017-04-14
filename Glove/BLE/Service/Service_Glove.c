@@ -147,6 +147,63 @@ void Service_Glove_SetAnglePitch(int16_t *anglePitch)
     }
 }
 
+/*****************************************************************************
+ * Description: Updates the Throttle Characteristic and sends it to          *
+ *              connected bluetooth device                                   *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters:                                                               *
+ *      uint8_t *throttle - The throttle value of the glove                  *
+ *                                                                           *
+ *****************************************************************************/
+void Service_Glove_SetThrottle(uint8_t *throttle)
+{
+    // Update characteristic value
+    if (mGloveService.conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
+        uint16_t               len = 1;
+        ble_gatts_hvx_params_t hvx_params;
+        memset(&hvx_params, 0, sizeof(hvx_params));
+
+        hvx_params.handle = mGloveService.throttle_char_handles.value_handle;
+        hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
+        hvx_params.offset = 0;
+        hvx_params.p_len  = &len;
+        hvx_params.p_data = (uint8_t*)throttle;
+
+        sd_ble_gatts_hvx(mGloveService.conn_handle, &hvx_params);
+    }
+}
+
+/*****************************************************************************
+ * Description: Updates the Direction Characteristic and sends it to         *
+ *              connected bluetooth device                                   *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters:                                                               *
+ *      uint8_t *throttle - The throttle value of the glove                  *
+ *                                                                           *
+ *****************************************************************************/
+void Service_Glove_SetDirection(uint8_t *direction)
+{
+    // Update characteristic value
+    if (mGloveService.conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
+        uint16_t               len = 1;
+        ble_gatts_hvx_params_t hvx_params;
+        memset(&hvx_params, 0, sizeof(hvx_params));
+
+        hvx_params.handle = mGloveService.direction_char_handles.value_handle;
+        hvx_params.type   = BLE_GATT_HVX_NOTIFICATION;
+        hvx_params.offset = 0;
+        hvx_params.p_len  = &len;
+        hvx_params.p_data = (uint8_t*)direction;
+
+        sd_ble_gatts_hvx(mGloveService.conn_handle, &hvx_params);
+    }
+}
 
 /*****************************************************************************
  * Description: Adds the characteristics to the service in the bluetooth     *

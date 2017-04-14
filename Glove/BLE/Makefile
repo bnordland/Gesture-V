@@ -14,6 +14,7 @@
 # | None    | 12Mar17  | BNordland  | Initial creation                     | #
 # | @01a	| 09Apr17  | BNordland  | Added Accelerometer & Additional     | #
 # |			|		   |		    | Include folders.					   | #
+# | @02a    | 10Apr17  | BNordland  | Added nrf_drv_adc.c                  | #
 #  ------------------------------------------------------------------------  #
 ##############################################################################
 
@@ -75,6 +76,7 @@ SRC_FILES += \
   $(NRF5_SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
   $(NRF5_SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
   $(NRF5_SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
+  $(NRF5_SDK_PATH)/components/drivers_nrf/adc/nrf_drv_adc.c \
   $(NRF5_SDK_PATH)/components/libraries/bsp/bsp.c \
   $(NRF5_SDK_PATH)/components/libraries/bsp/bsp_btn_ble.c \
   $(NRF5_SDK_PATH)/components/libraries/bsp/bsp_nfc.c \

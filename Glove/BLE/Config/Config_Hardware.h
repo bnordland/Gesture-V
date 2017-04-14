@@ -14,12 +14,35 @@
 * | Flag    | (DDMYY)  | Author     | Description                         |  *
 * |---------|----------|------------|-------------------------------------   *
 * | None    | 07Apr17  | BNordland  | Initial creation                    |  *
+* | @01     | 10Apr17  | BNordland  | Added flex sensor pins              |  *
 *  ------------------------------------------------------------------------  *
 ******************************************************************************/
+
+#include "NordicSDK.h"
 
 // The location of the onboard LED
 #ifndef HDW_CONFIG_ONBOARD_LED_PIN
     #define HDW_CONFIG_ONBOARD_LED_PIN 19
+#endif
+
+// The location of direction flex sensor power pin @01a
+#ifndef HDW_CONFIG_DIR_FLEX_VIN_PIN
+    #define HDW_CONFIG_DIR_FLEX_VIN_PIN 7
+#endif
+
+// The location of the direction flex sensor analog digital conversion pin  @01a
+#ifndef HDW_CONFIG_DIR_FLEX_ADC_PIN
+    #define HDW_CONFIG_DIR_FLEX_ADC_PIN ADC_CONFIG_PSEL_AnalogInput5
+#endif
+
+// The location of the throttle flex sensor power pin @01a
+#ifndef HDW_CONFIG_THROTTLE_FLEX_VIN_PIN
+    #define HDW_CONFIG_THROTTLE_FLEX_VIN_PIN 15
+#endif
+
+// The location of the throttle flex sensor analog digital conversion pin  @01a
+#ifndef HDW_CONFIG_THROTTLE_FLEX_ADC_PIN
+    #define HDW_CONFIG_THROTTLE_FLEX_ADC_PIN ADC_CONFIG_PSEL_AnalogInput6
 #endif
 
 // The location of the SPI PINs

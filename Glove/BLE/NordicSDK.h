@@ -14,9 +14,12 @@
 * | Flag    | (DDMYY)  | Author     | Description                         |  *
 * |---------|----------|------------|-------------------------------------   *
 * | None    | 08Apr17  | BNordland  | Initial creation                    |  *
+* | @01     | 10Apr17  | BNordland  | Added ADC driver                    |  *
 *  ------------------------------------------------------------------------  *
 ******************************************************************************/
 
+#ifndef _NORDICSDK_H
+#define _NORDICSDK_H
 
 // nordic SDK header files
 #include "nordic_common.h"
@@ -50,3 +53,8 @@
 
 // Nordic SPI Includes
 #include "nrf_drv_spi.h"
+
+// Nordic ADC
+#include "nrf_drv_adc.h" // @01a
+
+#endif

@@ -23,6 +23,8 @@
 *     Nordic SDK Characteristics:                                            *
 *         Link: https://devzone.nordicsemi.com/tutorials/17/                 *
 *         Notes: For information on bluetooth service characteristics        *
+*     Arduino Map Implementaiton:                                            *
+*         Link: https://www.arduino.cc/en/Reference/Map                      *
 *                                                                            *
 *                                                                            *
 * ------------------------------------------------------------------------   *
@@ -66,6 +68,16 @@ static uint16_t  mConnectionHandle = BLE_CONN_HANDLE_INVALID;   // Bluetooth sta
 APP_TIMER_DEF(mTimerId); // The timer
 static Sensors_Accel_Data_t accel_data; // accelerometer data
 
+// Channel for Throttle
+static nrf_drv_adc_channel_t mThrottleADCChannelConfig = NRF_DRV_ADC_DEFAULT_CHANNEL(HDW_CONFIG_THROTTLE_FLEX_ADC_PIN);
+static nrf_adc_value_t mThrottleAdcValue;
+static uint8_t mThrottleValue; // The interpreted throttle value: 0 to 100
+
+// Channel for Direction
+static nrf_drv_adc_channel_t mDirectionADCChannelConfig = NRF_DRV_ADC_DEFAULT_CHANNEL(HDW_CONFIG_DIR_FLEX_ADC_PIN);
+static nrf_adc_value_t mDirectionAdcValue;
+static uint8_t mDirectionValue; // The interpreted direction value: 1 for forward, 0 for backward
+
 // Function Definitions
     // Functions Required for Setup
     static void pSetupTimers(); // Called to set up timers
@@ -76,6 +88,7 @@ static Sensors_Accel_Data_t accel_data; // accelerometer data
     static void pSetupBluetoothServices(); // Called to set up bluetooth services
     static void pSetupBluetoothAdvertising(); // Called to set up bluetooth device advertising
     static void pSetupConnectionParameters(); // Called to set up the connection parameters
+    static void pSetupFlexSensors(); // Called to set up the flex sensors
 
     // Required for Starting
 
@@ -92,6 +105,9 @@ static Sensors_Accel_Data_t accel_data; // accelerometer data
 
     // Functions for Error Handling
     static void pConnectionParametersErrorHandler(uint32_t nrf_error);
+
+    // Helper functions
+    static uint16_t pInterpretFlexSensorValue(uint16_t input, uint16_t inputMin, uint16_t inputMax, uint16_t outputMin, uint16_t outputMax);
 
 /*****************************************************************************
  * Description: Main application entry point                                 *
@@ -121,6 +137,11 @@ int main(void)
     // Initialize Accelerometer via SPI
     Sensors_AccelGyro_Init();
 
+    // For protection, Only set up flex sensors after we
+    // have determined that we are connected to sensors
+    // This is because this applies power to pins
+    pSetupFlexSensors();
+
     // Start execution of bluetooth and timers
     pStartTimers();
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
@@ -131,6 +152,14 @@ int main(void)
     // interrupts and timers
     while(1)
     {
+        // ADC
+        nrf_drv_adc_sample_convert(&mThrottleADCChannelConfig,&mThrottleAdcValue);
+        nrf_drv_adc_sample_convert(&mDirectionADCChannelConfig,&mDirectionAdcValue);
+
+        // interpret the values
+        mThrottleValue = pInterpretFlexSensorValue(mThrottleAdcValue, 750, 1023, 0, 100);
+        mDirectionValue = (mDirectionAdcValue < 800) ? 1 : 0; // if the sensor is bent, then go forward(1), else go backward (0)
+
         // TODO: we should also be using a complimentary filter and gyroscope data.
         Sensors_AccelGyro_GetAccelerometerData(&accel_data); // TODO: probably want to move this to a timer
         // Perform device power management
@@ -161,12 +190,31 @@ static void pMainTimerHandler(void * p_context)
 
         int16_t pitch = atan2(-accel_data.xData, sqrt(accel_data.yData*accel_data.yData + accel_data.zData*accel_data.zData)) * 180/M_PI;
         Service_Glove_SetAnglePitch(&pitch);
+        Service_Glove_SetThrottle(&mThrottleValue);
+        Service_Glove_SetDirection(&mDirectionValue);
     }
     else
     {
         // If we do not have a connection, toggle the LED.
         nrf_gpio_pin_toggle(HDW_CONFIG_ONBOARD_LED_PIN);
     }
+}
+
+/*****************************************************************************
+ ******************Start of Helper Handler Functions**************************
+ *****************************************************************************/
+
+uint16_t pInterpretFlexSensorValue(uint16_t input, uint16_t inputMin, uint16_t inputMax, uint16_t outputMin, uint16_t outputMax)
+{
+    // The map formula does not work well without bounding
+    if(input > inputMax) input = inputMax;
+    if(input < inputMin) input = inputMin;
+
+    // the following formula was taken from https://www.arduino.cc/en/Reference/Map
+  uint16_t value = (input - inputMin) * (outputMax - outputMin) / (inputMax - inputMin) + outputMin;
+
+  // The value will be inverted from where we want since high is not bent, so invert the value
+  return 100 - value;
 }
 
 /*****************************************************************************
@@ -551,6 +599,30 @@ static void pSetupConnectionParameters()
 
     err_code = ble_conn_params_init(&cp_init);
     APP_ERROR_CHECK(err_code);
+}
+
+/*****************************************************************************
+ * Description: Set up flex sensors                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ *****************************************************************************/
+static void pSetupFlexSensors()
+{
+    // Apply Power to the flex sensors
+    nrf_gpio_cfg_output(HDW_CONFIG_DIR_FLEX_VIN_PIN);
+    nrf_gpio_pin_set(HDW_CONFIG_DIR_FLEX_VIN_PIN);
+    nrf_gpio_cfg_output(HDW_CONFIG_THROTTLE_FLEX_VIN_PIN);
+    nrf_gpio_pin_set(HDW_CONFIG_THROTTLE_FLEX_VIN_PIN);
+
+    // init ADC driver
+    ret_code_t ret_code;
+    nrf_drv_adc_config_t config = NRF_DRV_ADC_DEFAULT_CONFIG;
+
+    ret_code = nrf_drv_adc_init(&config, NULL);
+    APP_ERROR_CHECK(ret_code);
 }
 
 /*****************************************************************************

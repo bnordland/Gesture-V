@@ -21,6 +21,7 @@
 * | Flag    | (DDMYY)  | Author     | Description                     | *
 * |---------|----------|------------|---------------------------------  *
 * | None    | 10Mar17  | BNordland  | Initial creation                | *
+* | @01     | 14Apr17  | BNordland  | Enable ADC                      | *
 *  -------------------------------------------------------------------  *
 *************************************************************************/
 
@@ -102,7 +103,7 @@
     // ADC_ENABLED - nrf_drv_adc - Driver for ADC peripheral (nRF51)
     //==========================================================
     #ifndef ADC_ENABLED
-        #define ADC_ENABLED 0
+        #define ADC_ENABLED 1   // @01a enable ADC
     #endif
     #if  ADC_ENABLED
         // <o> ADC_CONFIG_IRQ_PRIORITY  - Interrupt priority
