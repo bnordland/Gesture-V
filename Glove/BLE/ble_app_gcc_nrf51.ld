@@ -1,4 +1,5 @@
 /* Linker script to configure memory regions. */
+/* Source: Nordic SDK HeartRate Service Example */
 
 SEARCH_DIR(.)
 GROUP(-lgcc -lc -lnosys)
