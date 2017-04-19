@@ -15,6 +15,7 @@
 * | Flag    | (DDMYY)  | Author     | Description                         |  *
 * |---------|----------|------------|-------------------------------------   *
 * | None    | 16Apr17  | BNordland  | Initial creation                    |  *
+* | @01     | 19Apr17  | BNordland  | Notification Enable Improvements    |  *
 *  ------------------------------------------------------------------------  *
 ******************************************************************************/
 
@@ -31,8 +32,6 @@ typedef struct
     uint16_t    anglePitch_cccd_handle; // handle of the CCCD of the angle pitch characteristic as provided by a discovery
     uint16_t    throttle_handle;        // handle of the throttle characteristic as provided by a discovery.
     uint16_t    throttle_cccd_handle;   // handle of the CCCD of the throttle characteristic as provided by a discovery
-    bool        throttle_notify_enable;
-    bool        direction_notify_enable;
     uint16_t    direction_handle;       // handle of the direction characteristic as provided by a discovery.
     uint16_t    direction_cccd_handle;  // handle of the CCCD of the direction characteristic as provided by a discovery
 } Client_Glove_Handles_t;
@@ -44,6 +43,9 @@ typedef struct Client_Glove_Data
     uint16_t                     conn_handle;        // Handle of the current connection.
     Client_Glove_Handles_t       handles;            // Handles on the connected peer device needed to interact with it.
     Client_Glove_Event_Handler_t evt_handler;        // Application event handler to be called when there is an event
+    bool                         pitch_notify_enable; // Indicates if the throttle notifications have been enabled
+    bool                         throttle_notify_enable; // Indicates if the direction notifications have been enabled
+    bool                         notifyEnableComplete;   // @01a Indicates if all notifications are enabled.
 } Client_Glove_Data_t;
 
 // Private variables
@@ -112,8 +114,9 @@ uint32_t Client_Glove_Init(Client_Glove_Init_t * initData)
     mClientData.handles.throttle_cccd_handle    = BLE_GATT_HANDLE_INVALID;
     mClientData.handles.direction_handle        = BLE_GATT_HANDLE_INVALID;
     mClientData.handles.direction_cccd_handle   = BLE_GATT_HANDLE_INVALID;
-    mClientData.handles.throttle_notify_enable  = false;
-    mClientData.handles.direction_notify_enable  = false;
+    mClientData.pitch_notify_enable             = false; // @01a
+    mClientData.throttle_notify_enable          = false; // @01a
+    mClientData.notifyEnableComplete            = false; // @01a
 
     return ble_db_discovery_evt_register(&glove_uuid);
 }
@@ -235,8 +238,9 @@ void Client_Glove_BLEEventHandler(const ble_evt_t * event)
                 gloveEvent.evt_type = Client_Glove_Event_DISCONNECTED;
 
                 mClientData.conn_handle = BLE_CONN_HANDLE_INVALID;
-                mClientData.handles.throttle_notify_enable  = false;
-                mClientData.handles.direction_notify_enable  = false;
+                mClientData.throttle_notify_enable          = false; // @01a reset notification enables on disconnect
+                mClientData.pitch_notify_enable             = false; // @01a reset notification enables on disconnect
+                mClientData.notifyEnableComplete            = false; // @01a reset notification enables on disconnect
                 mClientData.evt_handler(&gloveEvent);
             }
             break;
@@ -274,12 +278,15 @@ static void pNotifyApplication(const ble_evt_t * event)
         notifyEventData.p_data   = (uint8_t *)event->evt.gattc_evt.params.hvx.data;
         notifyEventData.data_len = event->evt.gattc_evt.params.hvx.len;
 
-        mClientData.evt_handler(&notifyEventData);
-
-        if(mClientData.handles.throttle_notify_enable == false)
+        // @01a - Only send notifications if all notifications are enabled
+        if(mClientData.notifyEnableComplete)
+        {
+            mClientData.evt_handler(&notifyEventData);
+        }
+        else if(!mClientData.pitch_notify_enable)
         {
             pConfigureNotification(mClientData.handles.throttle_cccd_handle, true);
-            mClientData.handles.throttle_notify_enable = true;
+            mClientData.pitch_notify_enable = true;
         }
     }
     else if ( (mClientData.handles.throttle_handle != BLE_GATT_HANDLE_INVALID)
@@ -295,11 +302,15 @@ static void pNotifyApplication(const ble_evt_t * event)
         notifyEventData.p_data   = (uint8_t *)event->evt.gattc_evt.params.hvx.data;
         notifyEventData.data_len = event->evt.gattc_evt.params.hvx.len;
 
-        mClientData.evt_handler(&notifyEventData);
-        if(mClientData.handles.direction_notify_enable == false)
+        // @01a - Only send notifications if all notifications are enabled
+        if(mClientData.notifyEnableComplete)
+        {
+            mClientData.evt_handler(&notifyEventData);
+        }
+        else if(!mClientData.throttle_notify_enable)
         {
             pConfigureNotification(mClientData.handles.direction_cccd_handle, true);
-            mClientData.handles.direction_notify_enable = true;
+            mClientData.throttle_notify_enable = true;
         }
     }
     else if ( (mClientData.handles.direction_handle != BLE_GATT_HANDLE_INVALID)
@@ -316,7 +327,15 @@ static void pNotifyApplication(const ble_evt_t * event)
         notifyEventData.p_data   = (uint8_t *)event->evt.gattc_evt.params.hvx.data;
         notifyEventData.data_len = event->evt.gattc_evt.params.hvx.len;
 
-        mClientData.evt_handler(&notifyEventData);
+        // @01a - Only send notifications if all notifications are enabled
+        if(mClientData.notifyEnableComplete)
+        {
+            mClientData.evt_handler(&notifyEventData);
+        }
+        else
+        {
+            mClientData.notifyEnableComplete = true;
+        }
     }
 }
 
@@ -337,11 +356,13 @@ static uint32_t pEnableNotifications()
         return NRF_ERROR_INVALID_STATE;
     }
 
-    // TODO: this is not very elegant, we call the first
-    // then enable subsequent notifications after the first is enabled.
+    // Note this will trigger a cascading effect.
+    // Once notifications are enabled for the pitch angle, then,
+    // notifications will be enabled for the throttle and direction.
+    // The client will not be notified until notifications have been enabled
+    // for all three.
     pConfigureNotification(mClientData.handles.anglePitch_cccd_handle, true);
-    //pConfigureNotification(mClientData.handles.direction_cccd_handle, true);
-    //pConfigureNotification(mClientData.handles.throttle_cccd_handle, true);
+
     return 0;//returnCode;
 }
 
