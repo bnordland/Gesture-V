@@ -22,6 +22,8 @@
 * |---------|----------|------------|---------------------------------  *
 * | None    | 10Mar17  | BNordland  | Initial creation                | *
 * | @01     | 14Apr17  | BNordland  | Enable ADC                      | *
+* | @02     | 18Apr17  | BNordland  | Making connection interval      | *
+* |         |          |            | updates.                        | *
 *  -------------------------------------------------------------------  *
 *************************************************************************/
 
@@ -33,8 +35,8 @@
 #define APP_ADV_INTERVAL                 50                                         /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS       180                                        /**< The advertising timeout in units of seconds. */
 
-#define MIN_CONN_INTERVAL                MSEC_TO_UNITS(100, UNIT_1_25_MS)           /**< Minimum acceptable connection interval (0.1 seconds). */
-#define MAX_CONN_INTERVAL                MSEC_TO_UNITS(200, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (0.2 second). */
+#define MIN_CONN_INTERVAL                MSEC_TO_UNITS(20, UNIT_1_25_MS)            /** @02c Minimum acceptable connection interval. */
+#define MAX_CONN_INTERVAL                MSEC_TO_UNITS(75, UNIT_1_25_MS)            /** @02c Maximum acceptable connection interval. */
 #define SLAVE_LATENCY                    0                                          /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                 MSEC_TO_UNITS(4000, UNIT_10_MS)            /**< Connection supervisory timeout (4 seconds). */
 
