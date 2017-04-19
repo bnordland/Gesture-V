@@ -15,6 +15,8 @@
 * |---------|----------|------------|-------------------------------------   *
 * | None    | 08Apr17  | BNordland  | Initial creation                    |  *
 * | @01     | 10Apr17  | BNordland  | Added ADC driver                    |  *
+* | N/A     | 18Apr17  | Bnordland  | Removing bsp.h, bsp_btn_ble.h and   |  *
+* |         |          |            | sensorsim.h                         |  *
 *  ------------------------------------------------------------------------  *
 ******************************************************************************/
 
@@ -34,9 +36,6 @@
 #include "boards.h"
 #include "softdevice_handler.h"
 #include "app_timer.h"
-#include "bsp.h"
-#include "bsp_btn_ble.h"
-#include "sensorsim.h"
 #include "nrf_gpio.h"
 #include "ble_hci.h"
 #include "ble_advdata.h"

@@ -32,6 +32,7 @@
 * | Flag    | (DDMYY)  | Author     | Description                         |  *
 * |---------|----------|------------|-------------------------------------   *
 * | None    | 31Mar17  | BNordland  | Initial creation                    |  *
+* | None    | 18Apr17  | Bnordland  | Removed bsp (board support package) |  *
 *  ------------------------------------------------------------------------  *
 ******************************************************************************/
 
@@ -81,7 +82,6 @@ static uint8_t mDirectionValue; // The interpreted direction value: 1 for forwar
 // Function Definitions
     // Functions Required for Setup
     static void pSetupTimers(); // Called to set up timers
-    static void pStartTimers(); // Called to start timers
     static void pSetupBLEStack(); // Called to set up the ble stack
     static void pSetupPeerManager(); // Called to set up the peer manager
     static void pSetupGAPParameters(); // Called to set up generic access profile
@@ -91,6 +91,7 @@ static uint8_t mDirectionValue; // The interpreted direction value: 1 for forwar
     static void pSetupFlexSensors(); // Called to set up the flex sensors
 
     // Required for Starting
+    static void pStartTimers(); // Called to start timers
 
     // Functions required for Runtime
     static void pMainTimerHandler(void * p_context); // Main application timer
@@ -201,7 +202,7 @@ static void pMainTimerHandler(void * p_context)
 }
 
 /*****************************************************************************
- ******************Start of Helper Handler Functions**************************
+ *************************Start of Helper Functions***************************
  *****************************************************************************/
 
 uint16_t pInterpretFlexSensorValue(uint16_t input, uint16_t inputMin, uint16_t inputMax, uint16_t outputMin, uint16_t outputMax)
@@ -240,7 +241,6 @@ static void pBLEEventHandler(ble_evt_t* event)
 
     // Forward BLE events to other event handlers
     ble_conn_params_on_ble_evt(event);
-    bsp_btn_ble_on_ble_evt(event);
     pBLEEventHandlerImpl(event);
     ble_advertising_on_ble_evt(event);
 
@@ -258,13 +258,10 @@ static void pBLEEventHandler(ble_evt_t* event)
  *****************************************************************************/
 static void pBLEEventHandlerImpl(ble_evt_t * event)
 {
-    uint32_t err_code;
 
     switch (event->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-            APP_ERROR_CHECK(err_code);
             mConnectionHandle = event->evt.gap_evt.conn_handle;
             break;
         case BLE_GAP_EVT_DISCONNECTED:
@@ -320,18 +317,8 @@ static void pAdvertisingEventHandler(ble_adv_evt_t event)
     switch (event)
     {
         case BLE_ADV_EVT_FAST:
-            err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-            APP_ERROR_CHECK(err_code);
             break;
         case BLE_ADV_EVT_IDLE:
-            // put the device to sleep
-            err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-            APP_ERROR_CHECK(err_code);
-
-            // Prepare wakeup buttons.
-            err_code = bsp_btn_ble_sleep_mode_prepare();
-            APP_ERROR_CHECK(err_code);
-
             // Go to system-off mode (this function will not return; wakeup will cause a reset).
             err_code = sd_power_system_off();
             APP_ERROR_CHECK(err_code);

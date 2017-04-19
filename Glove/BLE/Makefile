@@ -70,16 +70,12 @@ SRC_FILES += \
   $(NRF5_SDK_PATH)/components/libraries/util/nrf_assert.c \
   $(NRF5_SDK_PATH)/components/libraries/util/sdk_errors.c \
   $(NRF5_SDK_PATH)/components/libraries/util/sdk_mapped_flags.c \
-  $(NRF5_SDK_PATH)/components/libraries/sensorsim/sensorsim.c \
   $(NRF5_SDK_PATH)/components/boards/boards.c \
   $(NRF5_SDK_PATH)/components/drivers_nrf/clock/nrf_drv_clock.c \
   $(NRF5_SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
   $(NRF5_SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
   $(NRF5_SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
   $(NRF5_SDK_PATH)/components/drivers_nrf/adc/nrf_drv_adc.c \
-  $(NRF5_SDK_PATH)/components/libraries/bsp/bsp.c \
-  $(NRF5_SDK_PATH)/components/libraries/bsp/bsp_btn_ble.c \
-  $(NRF5_SDK_PATH)/components/libraries/bsp/bsp_nfc.c \
   $(NRF5_SDK_PATH)/components/ble/common/ble_advdata.c \
   $(NRF5_SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \
   $(NRF5_SDK_PATH)/components/ble/common/ble_conn_params.c \
@@ -140,7 +136,6 @@ INC_FOLDERS += \
   $(NRF5_SDK_PATH)/components/ble/common \
   $(NRF5_SDK_PATH)/components/ble/ble_services/ble_lls \
   $(NRF5_SDK_PATH)/components/drivers_nrf/wdt \
-  $(NRF5_SDK_PATH)/components/libraries/bsp \
   $(NRF5_SDK_PATH)/components/ble/ble_services/ble_bas \
   $(NRF5_SDK_PATH)/components/libraries/experimental_section_vars \
   $(NRF5_SDK_PATH)/components/ble/ble_services/ble_ans_c \
@@ -188,7 +183,6 @@ INC_FOLDERS += \
   $(NRF5_SDK_PATH)/components/drivers_nrf/pdm \
   $(NRF5_SDK_PATH)/components/libraries/crc32 \
   $(NRF5_SDK_PATH)/components/libraries/usbd/class/audio \
-  $(NRF5_SDK_PATH)/components/libraries/sensorsim \
   $(NRF5_SDK_PATH)/components/ble/peer_manager \
   $(NRF5_SDK_PATH)/components/drivers_nrf/swi \
   $(NRF5_SDK_PATH)/components/ble/ble_services/ble_tps \
