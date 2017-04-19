@@ -42,3 +42,7 @@ program:
 flashG:
 	# Flash the glove
 	cd Glove/BLE && $(MAKE) flash
+
+flashV:
+	# Flash the vehicle ble
+	cd Vehicle/BLE && $(MAKE) flash
