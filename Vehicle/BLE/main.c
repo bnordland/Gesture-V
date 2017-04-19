@@ -18,7 +18,8 @@
 * | Change  | Date     |            |                                     |  *
 * | Flag    | (DDMYY)  | Author     | Description                         |  *
 * |---------|----------|------------|-------------------------------------   *
-* | None    | 36Apr17  | BNordland  | Initial creation                    |  *
+* | None    | 16Apr17  | BNordland  | Initial creation                    |  *
+* | @01     | 19Apr17  | BNordland  | Clear out data on disconnect.       |  *
 *  ------------------------------------------------------------------------  *
 ******************************************************************************/
 
@@ -114,6 +115,9 @@ static volatile bool mSPITxComplete; //Indicates if the SPI transfer is done
  *****************************************************************************/
 int main(void)
 {
+    // @01c - to start with, until we are connected, we don't want to move
+    memset(&mAppData, 0x00, sizeof(mAppData));
+
     // Initialize and setup hardware
     pSetupTimers();
     pSetupDbDiscovery();
@@ -227,6 +231,8 @@ void pGloveClientEventHandler(const Client_Glove_Event_t * event)
         }
         case Client_Glove_Event_DISCONNECTED:
         {
+            // @01a - disconnected, we want to set all to zero in order to stop activity
+            memset(&mAppData, 0x00, sizeof(mAppData));
             // disconnected, start scanning again.
             pStartScanning();
             break;
