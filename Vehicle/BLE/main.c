@@ -82,6 +82,7 @@ static AppData_t                mAppData; // The application data structure.
 #define SPIS_INSTANCE 1 /**< SPIS instance index. */
 static const nrf_drv_spis_t mSPIsDriver = NRF_DRV_SPIS_INSTANCE(SPIS_INSTANCE); // SPI Slave Driver
 static uint8_t       mRxBuffer[sizeof(AppData_t) + 1]; // RxBuffer that is the size AppData + 1 buffer byte
+static AppData_t                mTxBuffer; // The transmit buffer
 static volatile bool mSPITxComplete; //Indicates if the SPI transfer is done
 
 // Function Definitions
@@ -117,6 +118,7 @@ int main(void)
 {
     // @01c - to start with, until we are connected, we don't want to move
     memset(&mAppData, 0x00, sizeof(mAppData));
+    memset(&mTxBuffer, 0x00, sizeof(mTxBuffer));
 
     // Initialize and setup hardware
     pSetupTimers();
@@ -139,7 +141,6 @@ int main(void)
     spis_config.mosi_pin              = HDW_CONFIG_SPI_MOSI_PIN;
     spis_config.sck_pin               = HDW_CONFIG_SPI_SCK_PIN;
     APP_ERROR_CHECK(nrf_drv_spis_init(&mSPIsDriver, &spis_config, pSPIEventHandler));
-    // TODO: when not connected we should be transferring 0's.
     // TODO: we should create a Comm_SPISlave
 
 
@@ -147,7 +148,7 @@ int main(void)
     {
         mSPITxComplete = false;
 
-        APP_ERROR_CHECK(nrf_drv_spis_buffers_set(&mSPIsDriver, (uint8_t*)&mAppData, sizeof(AppData_t), mRxBuffer, sizeof(AppData_t)));
+        APP_ERROR_CHECK(nrf_drv_spis_buffers_set(&mSPIsDriver, (uint8_t*)&mTxBuffer, sizeof(AppData_t), mRxBuffer, sizeof(AppData_t)));
 
         while (!mSPITxComplete)
         {
@@ -169,6 +170,7 @@ void pSPIEventHandler(nrf_drv_spis_event_t event)
     {
         if (event.evt_type == NRF_DRV_SPIS_XFER_DONE)
         {
+            memcpy(&mTxBuffer, &mAppData, sizeof(AppData_t)); // copy the new tx buffer
             mSPITxComplete = true;
         }
     }
@@ -213,7 +215,7 @@ void pGloveClientEventHandler(const Client_Glove_Event_t * event)
     {
         case Client_Glove_Event_ANGLEPITCH_UPDATED:
         {
-            mAppData.anglePitch = 0; // TODO: implement this by getting uint16_t from event->p_data;
+            mAppData.anglePitch = ((uint16_t)event->p_data[0] << 8) | (uint16_t)event->p_data[1];
             break;
         }
         case Client_Glove_Event_THROTTLE_UPDATED:
@@ -233,6 +235,7 @@ void pGloveClientEventHandler(const Client_Glove_Event_t * event)
         {
             // @01a - disconnected, we want to set all to zero in order to stop activity
             memset(&mAppData, 0x00, sizeof(mAppData));
+            nrf_gpio_pin_set(HDW_CONFIG_ONBOARD_LED_PIN);
             // disconnected, start scanning again.
             pStartScanning();
             break;
