@@ -6,4 +6,27 @@ The basis for this project is for a final project for the *SENG 5831: Software D
 
 ## Hardware
 
-The primary hardware platform is an Atmel AVR 8-bit microcontroller.
+The primary hardware platform for the vehicle is an Atmel AVR 8-bit microcontroller.
+
+### Glove Hardware Components
+
+* 4.5" Flex Sensor x 2
+* 10k Ohm Resistor x 2
+* BLE Nano
+* LSM6DS33 (Accelerometer & Gyroscope)
+* Battery Holder for 2xCR2032 Batteries
+* Wires as needed to attach components as per wiring diagram *below*.
+
+### Glove Hardware Wiring
+![Image of Glove Hardware](https://github.com/bnordland/Gesture-V/raw/master/Documentation/GloveHardware.png)
+
+### Vehicle Hardware Components
+
+* A* Microcontroller
+* Motors x 2
+* BLE Nano
+* Ultrasonic Sensor
+* Wires as needed to attach components as per wiring diagram *below*.
+
+### Vehicle Hardware Wiring
+![Image of Vehicle Hardware](https://raw.githubusercontent.com/bnordland/Gesture-V/master/Documentation/VehicleHardware.png)
