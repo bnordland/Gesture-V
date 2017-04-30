@@ -21,20 +21,59 @@
 #ifndef _util_H_
 #define _util_H_
 
-typedef int bool;
-enum { false = 0, true = 1 };
+#include <avr/io.h>
 
-// Helper functions
-// for toggling a bit
+#define DDR_INPUT 0
+#define DDR_OUTPUT 1
+
+// Define the boolean type
+typedef int bool;
+enum { false = 0, true = 1 }; // Define the boolean values
+
+/**************************************************************************************
+* Macro Definition: bitToggle(port,bit)
+*
+* Description: For toggling the value of a bit. If the bit is currently on, it'll be
+*              set to off. If the bit is currently off, it'll be set to on.
+*
+* Parameters:
+*      port    The port the bit is on
+*      bit     The bit (pin) on the port to toggle
+***************************************************************************************/
 #define bitToggle(port,bit) port ^= ( 1 << bit )
 
-// for holding bit high
+/**************************************************************************************
+* Macro Definition: bitOff(port,bit)
+*
+* Description: For holding a bit high
+*
+* Parameters:
+*      port    The port the bit is on
+*      bit     The bit (pin) on the port to turn on
+***************************************************************************************/
 #define bitOn(port,bit) port |= (1 << bit)
 
-// for holding bit low
+/**************************************************************************************
+* Macro Definition: bitOff(port,bit)
+*
+* Description: For holding a bit low
+*
+* Parameters:
+*      port    The port the bit is on
+*      bit     The bit (pin) on the port to turn off
+***************************************************************************************/
 #define bitOff(port,bit) port &= ~(1 << bit)
 
-// for setting a bit to a particular value
+/**************************************************************************************
+* Macro Definition: bitSet(port,bit,on)
+*
+* Description: For setting a bit in a register to a particular value
+*
+* Parameters:
+*      port    The port the bit is on
+*      bit     The bit (pin) on the port
+*      on      either 1/true (on) or 0/false (off), for the value of the bit.
+***************************************************************************************/
 #define bitSet(port,bit,on) \
  ({ \
  	if(on) \
@@ -44,11 +83,6 @@ enum { false = 0, true = 1 };
  		bitOff(port,bit); \
  	} \
  }) \
-
-#include <avr/io.h>
-
-#define DDR_INPUT 0
-#define DDR_OUTPUT 1
 
  /**************************************************************************************
  * Macro Definition: setDDR(ddr,ddrbit,func)

@@ -133,8 +133,6 @@
 #endif
 
 
-
-
 // Definitions useful for callers of the motor
 #define MOTOR_COUNTSPERREV 2248.86 // the number of counts per revolution
 #define MOTOR_COUNTSPERDEGREE 6.24683 // number of counts per degree

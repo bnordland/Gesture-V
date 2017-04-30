@@ -27,6 +27,14 @@
 // integer types
 #include <stdint.h>
 
+/*****************************************************************************
+ * Description: Sets the clock select mode for timer0 to the specified value *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: cs - Clock select value (see definition for TimerClockSelect) *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer0ClockSelect(TimerClockSelect cs)
 {
 	switch(cs)
@@ -69,6 +77,14 @@ void setTimer0ClockSelect(TimerClockSelect cs)
 	}
 }
 
+/*****************************************************************************
+ * Description: Sets the clock select mode for timer1 to the specified value *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: cs - Clock select value (see definition for TimerClockSelect) *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer1ClockSelect(TimerClockSelect cs)
 {
 	switch(cs)
@@ -110,6 +126,14 @@ void setTimer1ClockSelect(TimerClockSelect cs)
 	}	
 }
 
+/*****************************************************************************
+ * Description: Sets the clock select mode for timer3 to the specified value *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: cs - Clock select value (see definition for TimerClockSelect) *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer3ClockSelect(TimerClockSelect cs)
 {
 	switch(cs)
@@ -151,7 +175,14 @@ void setTimer3ClockSelect(TimerClockSelect cs)
 	}	
 }
 
-
+/*****************************************************************************
+ * Description: Sets the Waveform generation mode for timer0                 *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: mode - WGM mode (see definition for TimerWGM structure)       *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer0WGMMode(TimerWGM mode)
 {
 	if(mode.bits.WGMn0)
@@ -185,6 +216,14 @@ void setTimer0WGMMode(TimerWGM mode)
 	// TODO: should probably verify reserved are 0
 }
 
+/*****************************************************************************
+ * Description: Sets the Waveform generation mode for timer1                 *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: mode - WGM mode (see definition for TimerWGM structure)       *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer1WGMMode(TimerWGM mode)
 {
 	if(mode.bits.WGMn0)
@@ -226,6 +265,14 @@ void setTimer1WGMMode(TimerWGM mode)
 	// TODO: should probably verify reserved are 0
 }
 
+/*****************************************************************************
+ * Description: Sets the Waveform generation mode for timer3                 *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: mode - WGM mode (see definition for TimerWGM structure)       *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer3WGMMode(TimerWGM mode)
 {
 	if(mode.bits.WGMn0)
@@ -267,7 +314,18 @@ void setTimer3WGMMode(TimerWGM mode)
 	// TODO: should probably verify reserved are 0
 }
 
-
+/*****************************************************************************
+ * Description: Sets the compare output mode (COM) for timer0                *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: channel - which channel (A, or B) to set the compare output   *
+ *                       mode for.                                           *
+ *             com     - what to set the compare output mode for the channel *
+ *                       to. (see definition for TimerCompareOutputMode      *
+ *                       structure for more information)                     *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer0CompareOutputMode(TimerChannel channel, TimerCompareOutputMode com)
 {
 	uint8_t bit1 = 0;
@@ -309,6 +367,18 @@ void setTimer0CompareOutputMode(TimerChannel channel, TimerCompareOutputMode com
 	}
 }
 
+/*****************************************************************************
+ * Description: Sets the compare output mode (COM) for timer1                *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: channel - which channel (A, B, C) to set the compare output   *
+ *                       mode for.                                           *
+ *             com     - what to set the compare output mode for the channel *
+ *                       to. (see definition for TimerCompareOutputMode      *
+ *                       structure for more information)                     *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer1CompareOutputMode(TimerChannel channel, TimerCompareOutputMode com)
 {
 	uint8_t bit1 = 0;
@@ -354,6 +424,18 @@ void setTimer1CompareOutputMode(TimerChannel channel, TimerCompareOutputMode com
 	}
 }
 
+/*****************************************************************************
+ * Description: Sets the compare output mode (COM) for timer3                *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: channel - which channel (A, B, C) to set the compare output   *
+ *                       mode for.                                           *
+ *             com     - what to set the compare output mode for the channel *
+ *                       to. (see definition for TimerCompareOutputMode      *
+ *                       structure for more information)                     *
+ *                                                                           *
+ *****************************************************************************/
 void setTimer3CompareOutputMode(TimerChannel channel, TimerCompareOutputMode com)
 {
 	uint8_t bit1 = 0;
@@ -365,6 +447,7 @@ void setTimer3CompareOutputMode(TimerChannel channel, TimerCompareOutputMode com
 			bit0 = COM3A0;
 			break;
 		default:
+		    // TODO: implement other channels as appropriate
 			// uh oh, reset the board
 			kill(2);
 			break;
