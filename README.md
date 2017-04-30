@@ -25,7 +25,7 @@ The primary hardware platform for the vehicle is an Atmel AVR 8-bit microcontrol
 * Ultrasonic Sensor
 * Wires as needed to attach components as per wiring diagram *below*.
 
-## Information Architecture View
+## Information Architecture/Flow View
 ![Image of Information Flow](https://raw.githubusercontent.com/bnordland/Gesture-V/master/Documentation/InformationFlow.png)
 
 ## Hardware Wiring
