@@ -23,7 +23,6 @@ endif
 
 ifndef VIRTUAL_SERIAL_PATH
 $(warning VIRTUAL_SERIAL_PATH must be set to use usb virtual serial - setting to makefilepath)
-VIRTUAL_SERIAL_PATH=/Users/nordland/Documents/MSSE/Spring2017/Embedded/lib/VirtualSerial/
 else
 CFLAGS+= -I$(VIRTUAL_SERIAL_PATH) -DVIRTUAL_SERIAL
 LDFLAGS+=  -L$(VIRTUAL_SERIAL_PATH) -lVirtualSerial
