@@ -14,12 +14,17 @@
 *   AVR SPI Tutorial:                                                   *
 *       Link: http://maxembedded.com/2013/11/the-spi-of-the-avr/        *
 *       Notes: For Information on SPI programming with the AVR          *
+*   Ultrasonic Tutorial:                                                *
+*       Link: http://www.embedds.com/interfacing-ultrasonic-            *
+*                   rangefinder-with-avr/                               *
+*       Notes: Used as a basis for ultrasonic sensor.                   *
 *                                                                       *
 * --------------------------------------------------------------------  *
 * | Change  | Date     |            |                                 | *
 * | Flag    | (DDMYY)  | Author     | Description                     | *
 * |---------|----------|------------|---------------------------------  *
 * | None    | 18Apr17  | BNordland  | Initial creation                | *
+* | @01     | 30Apr17  | BNordland  | Adding ultrasonic sensor        | *
 *  -------------------------------------------------------------------  *
 *************************************************************************/
 
@@ -58,6 +63,16 @@
 #define DIRECTION_BACKWARD 0
 #define DIRECTION_FORWARD  1
 
+// @01a Ultrasonic Sensor Constants
+#define ULTRASONIC_STATE_OFF 0
+#define ULTRASONIC_STATE_PULSING   1
+#define ULTRASONIC_STATE_MEASURING 2
+#define ULTRASONIC_STATE_AVAILABLE 3
+#define ULTRASONIC_MAX_RSP_TIME_MS  200
+#define ULTRASONIC_INSTR_PER_MS     (F_CPU / 1000)
+#define ULTRASONIC_INSTR_PER_US     (ULTRASONIC_INSTR_PER_MS / 1000)
+#define ULTRASONIC_MAX_TICKS        (uint32_t)ULTRASONIC_MAX_RSP_TIME_MS * ULTRASONIC_INSTR_PER_MS
+
 // Internal function definitions
 void pSetup();
 void pStartupFlashLEDs();
@@ -65,6 +80,7 @@ void pRetrieveGloveValues();
 void pCalculateDuty();
 bool pIsDirectionChanging();
 uint8_t pSpiTransmit(uint8_t data);
+void pTriggerSonar(); // @01a start the ultrasonic detection
 
 // Global Variables
 volatile int16_t    mAnglePitch; // Typically between -90 and 90
@@ -76,6 +92,12 @@ volatile int16_t    mRightMotorDuty; // computed duty cycle of the passenger sid
 volatile bool       mPreviousDirection; // the direction we were going last time
 volatile uint16_t   mDirectionChangeCount; // how long we have been waiting for a direction change
 
+// Global Variables for ultrasonic @01a
+volatile uint8_t    mUltrasonicState;
+volatile uint32_t   mUltrasonicTimerOverflowCount;
+volatile float      mUltrasonicResult;
+
+
 int main(void)
 {
     pSetup();
@@ -84,6 +106,11 @@ int main(void)
 
     sei(); //Enables interrupts
 
+    uint8_t    ultrasonicDelayCount = 0; // @01a used to delay ultrasonic readings
+    uint32_t    collisionDistanceFront = 0; // @01a start off assuming we are going to hit something
+
+    // Have the motors figure out which direction
+    // is considered forward by calibrating them.
     calibrateMotor1();
     setMotor1DutyCycle(0);
     setMotor1Forward();
@@ -92,11 +119,54 @@ int main(void)
     setMotor2DutyCycle(0);
     setMotor2Forward();
 
-    mPreviousDirection = mVehicleDirection;
+    mPreviousDirection = mVehicleDirection; // set our direction to be whatever it may be (by default 0 for backward)
+
     while(1)
     {
         pRetrieveGloveValues();
         pCalculateDuty();
+
+        // Start @01a - Check for collisions
+        if(mUltrasonicState == ULTRASONIC_STATE_OFF)
+        {
+            // If the ultrasonic sensor is off,
+            // check to see if it has been long enough since
+            // the last reading, and try again.
+            if(ultrasonicDelayCount >= 5)
+            {
+                ultrasonicDelayCount = 0;
+                pTriggerSonar();
+            }
+            else
+            {
+                ultrasonicDelayCount++;
+            }
+        }
+        else if(mUltrasonicState == ULTRASONIC_STATE_AVAILABLE)
+        {
+            mUltrasonicState = ULTRASONIC_STATE_OFF;
+            if(mUltrasonicResult != -1)
+            {
+                collisionDistanceFront = mUltrasonicResult;
+            }
+            else
+            {
+                collisionDistanceFront = 1000; // assume big, we didn't get a response
+            }
+        }
+
+        // If we are closer than 15cm, let's stop
+        if(mVehicleDirection && collisionDistanceFront < 15)
+        {
+            mLeftMotorDuty = 0;
+            mRightMotorDuty = 0;
+            yellow(1); // indicate close collision with yellow LED
+        }
+        else
+        {
+            yellow(0); // Not close to hitting anything, or we are going backwards
+        }
+        // end @01a
 
         // If we are not currently changing the direction
         // of travel, then update our duty cycle.
@@ -141,10 +211,10 @@ void pCalculateDuty()
         mAnglePitch = -100;
     }
 
-    // Throttle limiter (we want at most 50%)
+    // Throttle limiter (we want at most 75%)
     if(mThrottle > 0)
     {
-        mThrottle = mThrottle / 2;
+        mThrottle = mThrottle / 1.5;
     }
 
     // Adjust for turning
@@ -258,6 +328,40 @@ uint8_t pSpiTransmit(uint8_t data)
     return(SPDR);
 }
 
+/*****************************************************************************
+ *                                                                      @01a *
+ *                                                                           *
+ * Description: Starts the triggering of an ultrasonic distance detection    *
+ *                                                                           *
+ *              Performance Note: This has 12us of delays in it.             *
+ *                               (almost ~200 instructions)                  *
+ *                                                                           *
+ *              Note: This will set trigger high, then lower it. We then     *
+ *                    wait for the echo line to come high, and measure       *
+ *                    how long the line stays high. The waiting for echo     *
+ *                    and measuring is all done via interrupts.              *
+ *                    See: ISR(INT0_vect) and ISR(TIMER0_OVF_vect)           *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ *****************************************************************************/
+void pTriggerSonar()
+{
+    if(mUltrasonicState == ULTRASONIC_STATE_OFF)
+    {
+        // generate the pulse for the trigger
+        // TODO: use hardware.h defines
+        bitOff(PORTE, PORTE6);
+        _delay_us(2); // delay for 1us
+        bitOn(PORTE, PORTE6);
+        mUltrasonicState = ULTRASONIC_STATE_PULSING;
+        _delay_us(10); // delay with high for 10us
+        bitOff(PORTE, PORTE6);
+    }
+}
+
 ISR(PCINT0_vect)
 {
     handleMotor1Interrupt();
@@ -271,6 +375,72 @@ ISR(INT1_vect)
 ISR(INT3_vect)
 {
     handleMotor2Interrupt();
+}
+
+/*****************************************************************************
+ *                                                                      @01a *
+ *                                                                           *
+ * Description: Timer overflow interrupt. Used to count how many times the   *
+ *              timer has overflowed since an ultrasonic reading was taken.  *
+ *              This will also calculate if things have gone on too long     *
+ *              (over 200ms) and will then cancel the ultrasonic reading     *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: TIMER0_OVF_vect - Timer overflow interrupt vector             *
+ *                                                                           *
+ *****************************************************************************/
+ISR(TIMER0_OVF_vect)
+{
+        if (mUltrasonicState == ULTRASONIC_STATE_MEASURING)
+        {
+            // currently measuring the distance (voltage rise happened before)
+            mUltrasonicTimerOverflowCount++;
+
+            // check to see if we have gone over maximum response time
+            uint32_t ticks = (mUltrasonicTimerOverflowCount * 256) + TCNT0;
+            if (ticks > ULTRASONIC_MAX_TICKS)
+            {
+                // timeout in distance measurement
+                mUltrasonicState = ULTRASONIC_STATE_AVAILABLE; // set to off, as no distance is available.
+                mUltrasonicResult = -1; // TODO: return max distance
+            }
+        }
+}
+
+/*****************************************************************************
+ *                                                                      @01a *
+ *                                                                           *
+ * Description: INT0 interrupt. Used for ultrasonic pulsing. Starts timer    *
+ *              counting when pin goes high, and captures measurement time   *
+ *              when pin goes low.                                           *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ * Parameters: INT0_vect - INT0 interrupt vector                             *
+ *                                                                           *
+ *****************************************************************************/
+ISR(INT0_vect)
+{
+    // TODO: we should probably do extra checking in here to make sure
+    //       the pin is actually in the state we want as well as the measurement
+    //       state. This way we don't get false readings somehow.
+    if (mUltrasonicState == ULTRASONIC_STATE_PULSING)
+    {
+        // voltage rise, we can start the measurement
+        mUltrasonicState = ULTRASONIC_STATE_MEASURING;
+
+        // reset counts
+        mUltrasonicTimerOverflowCount = 0;
+        TCNT0 = 0;
+    }
+    else if(mUltrasonicState == ULTRASONIC_STATE_MEASURING)
+    {
+        // voltage drop, stop the measurement
+        mUltrasonicState = ULTRASONIC_STATE_AVAILABLE;
+
+        mUltrasonicResult = (mUltrasonicTimerOverflowCount * 256 + TCNT0)/58.0/ULTRASONIC_INSTR_PER_US;
+    }
 }
 
 void pSetup()
@@ -289,8 +459,8 @@ void pSetup()
     // Setup SPI
     // Set MOSI, SCK as Output
     DDRB=(1<<DDB1)|(1<<DDB2)|(1<<DDB0); // TODO: make this nicer
-    SPCR=(1<<SPE)|(1<<MSTR)|(1<<SPR0); //|(1<<SPIE) < for interrupts
-    bitOn(PORTB, PORTB0);
+    SPCR=(1<<SPE)|(1<<MSTR)|(1<<SPR0);
+    bitOn(PORTB, PORTB0); // Turn off slave select (which is done by holding high)
 
     setupMotor1(); // This sets up the motor 1
     setupMotor2(); // This sets up the motor 2
@@ -301,6 +471,7 @@ void pSetup()
     bitOn(PCMSK0, motor1EncoderChannelBINT);
     bitOn(PCICR, PCIE0);// enable PCINT interrupts
 
+    // Enable interrupts for motor 2 encoders, which is done via standard INTx PINs
     // Set INT1 to trigger on rising and falling edge (mode: 1,0)
     bitOn(EICRA,ISC10);
     bitOff(EICRA, ISC11);
@@ -311,7 +482,34 @@ void pSetup()
     bitOn(EIMSK, INT1);
     bitOn(EIMSK, INT3);
 
-    SetupHardware(); //This setups the USB hardware and stdio // TODO: remove
+    // start @01a - setup ultrasonic sensor
+    // TODO: we should move to hardware.h for sonar
+    setDDR(DDRE,DDE6, DDR_OUTPUT); // trigger (transmit)
+    setDDR(DDRD,DDD0, DDR_INPUT); // echo pin (recieve)
+    bitOff(PORTE, PORTE6); // start with trigger off
+
+    // Turn on ultrasonic sensor power
+    setDDR(DDRF,DDF1, DDR_OUTPUT);
+    bitOn(PORTF, PORTF1);
+
+    // enable ultrasonic sensor interrupts (INT0)
+    // Set INT0 to trigger on rising and falling edge (mode: 1,0)
+    bitOn(EICRA,ISC00);
+    bitOff(EICRA, ISC01);
+    bitOn(EIMSK, INT0);
+
+    // Enable timer0
+    // Timer 0 - used for distance
+    TimerWGM timer0Mode;
+    timer0Mode.value = 0;
+    setTimer0WGMMode(timer0Mode);
+    setTimer0ClockSelect(CS1); // No prescaling
+    // TODO: this should probably be made easier and implemented in the timer library
+    // enable timer 0 interrupts
+    bitOn(TIMSK0,TOIE0); // TIMSK0
+    // end @01a - end of setup of ultrasonic sensor
+
+    SetupHardware(); //This setups the USB hardware and stdio
 }
 
 /***************************************************************************************

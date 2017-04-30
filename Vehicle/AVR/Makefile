@@ -12,6 +12,7 @@
 # | Flag    | (DDMYY)  | Author     | Description                          | #
 # |---------|----------|------------|--------------------------------------  #
 # | None    | 01Apr17  | BNordland  | Initial creation                     | #
+# | @01a    | 30Apr17  | BNordland  | Add floating point printing          | #
 #  ------------------------------------------------------------------------  #
 ##############################################################################
 
@@ -36,7 +37,8 @@ endif
 
 MCU=atmega32u4
 CFLAGS+=-g -Wall -mcall-prologues -mmcu=$(MCU) -Os
-LDFLAGS+=-Wl,-gc-sections -Wl,-relax
+# @01a added the following for floating point printing: -Wl,-u,vfprintf -lprintf_flt -lm
+LDFLAGS+=-Wl,-gc-sections -Wl,-relax -Wl,-u,vfprintf -lprintf_flt -lm
 CC=avr-gcc
 TARGET=main
 LIB_FILES = $(wildcard lib/*.c)
