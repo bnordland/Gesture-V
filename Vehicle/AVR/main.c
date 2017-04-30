@@ -38,6 +38,9 @@
 #include "lib/kill.h" // kill board
 #include "lib/motor.h" // motor utilities
 
+// Hardware Definitions
+#include "hardware.h"
+
 // Standard Includes
 #include <stdint.h> // integer types
 #include <string.h>
@@ -51,33 +54,27 @@
 #error VirtualSerial not defined, USB IO will not work
 #endif
 
-// TODO: move to hardware.h
-// BLE Nano Power
-#define EXT_BLE_DDR      DDRF
-#define EXT_BLE_DDRBIT   DDF0
-#define EXT_BLE_PORT PORTF
-#define EXT_BLE_PORTBIT  PORTF0
-
-// Global Definitions
+// Global Constants
 #define DIRECTION_BACKWARD 0
 #define DIRECTION_FORWARD  1
 
-// Internal definitions
+// Internal function definitions
 void pSetup();
 void pStartupFlashLEDs();
 void pRetrieveGloveValues();
 void pCalculateDuty();
+bool pIsDirectionChanging();
 uint8_t pSpiTransmit(uint8_t data);
 
 // Global Variables
-volatile int16_t    mAnglePitch;
+volatile int16_t    mAnglePitch; // Typically between -90 and 90
 volatile bool       mVehicleDirection; // use DIRECTION_FOWARD, and DIRECTION_BACKWARD
 volatile uint8_t    mThrottle; // a percentage of throttle from 0-100%
-volatile int16_t    mLeftMotorDuty;
-volatile int16_t    mRightMotorDuty;
+volatile int16_t    mLeftMotorDuty; // computed duty cycle of the drivers side motor
+volatile int16_t    mRightMotorDuty; // computed duty cycle of the passenger side motor
 
-volatile bool       mPreviousDirection;
-volatile uint16_t   mDirectionChangeCount;
+volatile bool       mPreviousDirection; // the direction we were going last time
+volatile uint16_t   mDirectionChangeCount; // how long we have been waiting for a direction change
 
 int main(void)
 {
@@ -101,36 +98,10 @@ int main(void)
         pRetrieveGloveValues();
         pCalculateDuty();
 
-        // If the direction changed, put in a delay
-        if(mPreviousDirection != mVehicleDirection)
+        // If we are not currently changing the direction
+        // of travel, then update our duty cycle.
+        if(!pIsDirectionChanging())
         {
-            setMotor1DutyCycle(0);
-            setMotor2DutyCycle(0);
-            if(mDirectionChangeCount > 250)
-            {
-                if(mVehicleDirection)
-                {
-                    // going forward
-                    setMotor1Forward();
-                    setMotor2Forward();
-                }
-                else
-                {
-                    // going backward
-                    setMotor1Backward();
-                    setMotor2Backward();
-                }
-                mDirectionChangeCount = 0;
-                mPreviousDirection = mVehicleDirection;
-            }
-            else
-            {
-                mDirectionChangeCount += 10;
-            }
-        }
-        else
-        {
-            mDirectionChangeCount = 0;
             if(mVehicleDirection)
             {
                 setMotor1DutyCycle((uint8_t)mLeftMotorDuty);
@@ -211,6 +182,53 @@ void pCalculateDuty()
         mLeftMotorDuty = 0;
     }
 
+}
+
+bool pIsDirectionChanging()
+{
+    if(mPreviousDirection != mVehicleDirection)
+    {
+        // If the direction changed, put in a delay
+        // of 25 times our normal setting of the duty
+        // cycle. This makes us favor the previous direction
+        // for times when we are flipping right on the edge
+        // and helps prevent such rapid changes in direction.
+
+        // set the duty cycle to 0
+        setMotor1DutyCycle(0);
+        setMotor2DutyCycle(0);
+
+        // Determine if we should change the direction
+        if(mDirectionChangeCount > 25)
+        {
+            if(mVehicleDirection)
+            {
+                // going forward
+                setMotor1Forward();
+                setMotor2Forward();
+            }
+            else
+            {
+                // going backward
+                setMotor1Backward();
+                setMotor2Backward();
+            }
+            mDirectionChangeCount = 0;
+            mPreviousDirection = mVehicleDirection; // update our previous direction
+        }
+        else
+        {
+            mDirectionChangeCount += 1;
+        }
+    }
+    else
+    {
+        // Directions do equal, set out change count back to 0
+        mDirectionChangeCount = 0;
+    }
+
+    // If the direction is changing, let's return true
+    return (mPreviousDirection != mVehicleDirection);
 }
 
 void pRetrieveGloveValues()
