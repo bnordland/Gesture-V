@@ -17,9 +17,6 @@ The primary hardware platform for the vehicle is an Atmel AVR 8-bit microcontrol
 * Battery Holder for 2xCR2032 Batteries
 * Wires as needed to attach components as per wiring diagram *below*.
 
-### Glove Hardware Wiring
-![Image of Glove Hardware](https://github.com/bnordland/Gesture-V/raw/master/Documentation/GloveHardware.png)
-
 ### Vehicle Hardware Components
 
 * A* Microcontroller
@@ -27,6 +24,13 @@ The primary hardware platform for the vehicle is an Atmel AVR 8-bit microcontrol
 * BLE Nano
 * Ultrasonic Sensor
 * Wires as needed to attach components as per wiring diagram *below*.
+
+## Information Architecture View
+![Image of Information Flow](https://raw.githubusercontent.com/bnordland/Gesture-V/master/Documentation/InformationFlow.png)
+
+## Hardware Wiring
+### Glove Hardware Wiring
+![Image of Glove Hardware](https://github.com/bnordland/Gesture-V/raw/master/Documentation/GloveHardware.png)
 
 ### Vehicle Hardware Wiring
 ![Image of Vehicle Hardware](https://raw.githubusercontent.com/bnordland/Gesture-V/master/Documentation/VehicleHardware.png)
