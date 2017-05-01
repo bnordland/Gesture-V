@@ -71,6 +71,19 @@ volatile char    pMotor1ForwardDirectionSetting = 0; // bit setting for moving t
 volatile uint8_t pMotor1ChannelALast = 0;
 volatile uint8_t pMotor1ChannelBLast = 0;
 
+/*****************************************************************************
+ * Function Definition: setupMotor2()                                        *
+ *                                                                           *
+ * Description: Sets all PINs as appropriate for the motor, and configures   *
+ *              the timer needed for the motor.                              *
+ *                                                                           *
+ *              Warning: Motor uses Timer1 ChannelB                          *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setupMotor2()
 {
 	// first verify that all motor2 variables are defined
@@ -109,6 +122,19 @@ void setupMotor2()
 	bitOn(motor2EncoderPowerPort , motor2EncoderPowerPin);
 }
 
+/*****************************************************************************
+ * Function Definition: calibrateMotor2()                                    *
+ *                                                                           *
+ * Description: Configures motor2 so that the forward direction is defined   *
+ *              as increasing the encoder counts.                            *
+ *                                                                           *
+ *              Warning: This requires running the motor a small amount.     *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void calibrateMotor2()
 {
 	setMotor2Forward();
@@ -138,6 +164,16 @@ void calibrateMotor2()
   	returnMotor2ToRefPosition();
 }
 
+/*****************************************************************************
+ * Function Definition: returnMotor1ToRefPosition()                          *
+ *                                                                           *
+ * Description: Returns motor1 to the 0 count encoder position               *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void returnMotor2ToRefPosition()
 {
 	int16_t count = getMotor2Count();
@@ -159,6 +195,25 @@ void returnMotor2ToRefPosition()
 	setMotor2DutyCycle(0);
 }
 
+/*****************************************************************************
+ * Function Definition: handleMotor2Interrupt()                              *
+ *                                                                           *
+ * Description: Should be called by the ISR for encoder PINs for Motor2      *
+ *              Updates the encoder count based on the direction that the    *
+ *              motor is currently running.                                  *
+ *              If forward, encoder count increases.                         *
+ *              If backward, encoder count decreases.                        *
+ *                                                                           *
+ *              Note: this is calculated by PIN changes, not by the          *
+ *                    current direction setting, this allows us to calibrate *
+ *                    our notion of forward and backwards based on an        *
+ *                    increasing or decreasing encoder count.                *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void handleMotor2Interrupt()
 {
 	// Make a copy of the current reading from the encoders
@@ -186,6 +241,16 @@ void handleMotor2Interrupt()
 	pMotor2ChannelBLast = m2b_val;
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor2DutyCycle(uint16_t dutyCycle)               *
+ *                                                                           *
+ * Description: Sets the duty cycle/speed of motor2 (0-100%)                 *
+ *                                                                           *
+ * Parameters: dutyCycle - a value for the speed from 0-100%                 *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor2DutyCycle(uint16_t dutyCycle)
 {
 	if (dutyCycle == 0) {
@@ -200,44 +265,111 @@ void setMotor2DutyCycle(uint16_t dutyCycle)
 	setMotor2On();
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor2Off()                                       *
+ *                                                                           *
+ * Description: Turns off Motor2                                             *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor2Off()
 {
 	// set to off by turning PWM to input
 	setDDR(motor2PWMDDR, motor2PWMDDRPin, DDR_INPUT);
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor2On()                                        *
+ *                                                                           *
+ * Description: Turns on Motor2                                              *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor2On()
 {
 	// set to on by turning PWM to output
 	setDDR(motor2PWMDDR, motor2PWMDDRPin, DDR_OUTPUT);
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor2Forward()                                   *
+ *                                                                           *
+ * Description: Sets the direction of motor2 to go forwards                  *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor2Forward()
 {
 	bitSet(motor2DirectionPort, motor2DirectionPin, pMotor2ForwardDirectionSetting);
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor2Backward()                                  *
+ *                                                                           *
+ * Description: Sets the direction of motor2 to go backwards                 *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor2Backward()
 {
 	bitSet(motor2DirectionPort, motor2DirectionPin, !pMotor2ForwardDirectionSetting);
 }
 
+/*****************************************************************************
+ * Function Definition: resetMotor2Count()                                   *
+ *                                                                           *
+ * Description: Resets the counter for motor2                                *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void resetMotor2Count()
 {
 	pMotor2Count = 0;
 }
 
-// @01c - update to be 32bit
+/*****************************************************************************
+ * Function Definition: getMotor2Count()                                     *
+ *                                                                           *
+ * Description: Gets the current counter for motor2                          *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: The current encoder count.                                       *
+ *          @01c - update to be 32bit instead of 16                          *
+******************************************************************************/
 int32_t getMotor2Count()
 {
 	return pMotor2Count;
 }
 
-
-
-
-
-
+/*****************************************************************************
+ * Function Definition: setupMotor1()                                        *
+ *                                                                           *
+ * Description: Sets all PINs as appropriate for the motor, and configures   *
+ *              the timer needed for the motor.                              *
+ *                                                                           *
+ *              Warning: Motor uses Timer1 ChannelA                          *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setupMotor1()
 {
     // first verify that all motor1 variables are defined
@@ -276,6 +408,19 @@ void setupMotor1()
     bitOn(motor1EncoderPowerPort , motor1EncoderPowerPin);
 }
 
+/*****************************************************************************
+ * Function Definition: calibrateMotor1()                                    *
+ *                                                                           *
+ * Description: Configures motor1 so that the forward direction is defined   *
+ *              as increasing the encoder counts.                            *
+ *                                                                           *
+ *              Warning: This requires running the motor a small amount.     *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void calibrateMotor1()
 {
     setMotor1Forward();
@@ -305,6 +450,25 @@ void calibrateMotor1()
     returnMotor1ToRefPosition();
 }
 
+/*****************************************************************************
+ * Function Definition: handleMotor1Interrupt()                              *
+ *                                                                           *
+ * Description: Should be called by the ISR for encoder PINs for Motor1      *
+ *              Updates the encoder count based on the direction that the    *
+ *              motor is currently running.                                  *
+ *              If forward, encoder count increases.                         *
+ *              If backward, encoder count decreases.                        *
+ *                                                                           *
+ *              Note: this is calculated by PIN changes, not by the          *
+ *                    current direction setting, this allows us to calibrate *
+ *                    our notion of forward and backwards based on an        *
+ *                    increasing or decreasing encoder count.                *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void handleMotor1Interrupt()
 {
     // Make a copy of the current reading from the encoders
@@ -332,17 +496,48 @@ void handleMotor1Interrupt()
     pMotor1ChannelBLast = m2b_val;
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor1On()                                        *
+ *                                                                           *
+ * Description: Turns on Motor1                                              *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor1On()
 {
     // set to on by turning PWM to output
     setDDR(motor1PWMDDR, motor1PWMDDRPin, DDR_OUTPUT);
 }
+
+/*****************************************************************************
+ * Function Definition: setMotor1Off()                                       *
+ *                                                                           *
+ * Description: Turns off Motor1                                             *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor1Off()
 {
     // set to off by turning PWM to input
     setDDR(motor1PWMDDR, motor1PWMDDRPin, DDR_INPUT);
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor1DutyCycle(uint16_t dutyCycle)               *
+ *                                                                           *
+ * Description: Sets the duty cycle/speed of motor1 (0-100%)                 *
+ *                                                                           *
+ * Parameters: dutyCycle - a value for the speed from 0-100%                 *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor1DutyCycle(uint16_t dutyCycle)
 {
     if (dutyCycle == 0) {
@@ -357,16 +552,46 @@ void setMotor1DutyCycle(uint16_t dutyCycle)
     setMotor1On();
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor1Forward()                                   *
+ *                                                                           *
+ * Description: Sets the direction of motor1 to go forwards                  *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor1Forward()
 {
     bitSet(motor1DirectionPort, motor1DirectionPin, pMotor1ForwardDirectionSetting);
 }
 
+/*****************************************************************************
+ * Function Definition: setMotor1Backward()                                  *
+ *                                                                           *
+ * Description: Sets the direction of motor1 to go backwards                 *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void setMotor1Backward()
 {
     bitSet(motor1DirectionPort, motor1DirectionPin, !pMotor1ForwardDirectionSetting);
 }
 
+/*****************************************************************************
+ * Function Definition: returnMotor1ToRefPosition()                          *
+ *                                                                           *
+ * Description: Returns motor1 to the 0 count encoder position               *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void returnMotor1ToRefPosition()
 {
     int16_t count = getMotor1Count();
@@ -388,30 +613,31 @@ void returnMotor1ToRefPosition()
     setMotor1DutyCycle(0);
 }
 
-/**************************************************
- * Function Definition: resetMotor1Count()
- *
- * Description: Resets the counter for motor1
- *
- * Parameters: None
- *
- * Returns: None
-***************************************************/
+/*****************************************************************************
+ * Function Definition: resetMotor1Count()                                   *
+ *                                                                           *
+ * Description: Resets the counter for motor1                                *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: None                                                             *
+ *                                                                           *
+ *****************************************************************************/
 void resetMotor1Count()
 {
     pMotor1Count = 0;
 }
 
-/**************************************************
- * Function Definition: getMotor1Count()
- *
- * Description: Gets the current counter for motor1
- *
- * Parameters: None
- *
- * Returns: The current encoder count.
- *          @01c - update to be 32bit instead of 16
-***************************************************/
+/*****************************************************************************
+ * Function Definition: getMotor1Count()                                     *
+ *                                                                           *
+ * Description: Gets the current counter for motor1                          *
+ *                                                                           *
+ * Parameters: None                                                          *
+ *                                                                           *
+ * Returns: The current encoder count.                                       *
+ *          @01c - update to be 32bit instead of 16                          *
+******************************************************************************/
 int32_t getMotor1Count()
 {
     return pMotor1Count;
