@@ -13,7 +13,7 @@ The primary hardware platform for the vehicle is a Pololu A-Star 32U4 Robot Cont
 | Quantity | Description          |
 | :-------:|:---------------------|
 | 1  | Glove |
-| 1  | BLE Nano ([Redbear Lab](http://redbearlab.com/blenano)|
+| 1  | BLE Nano ([Redbear Lab](http://redbearlab.com/blenano))|
 | 1  | SM6DS33 Accelerometer & Gyroscope ([Pololu Product #2736](https://www.pololu.com/product/2736))|
 | 2  | 10k Ohm Resistors |
 | 2  | 4.5" Flex Sensors ([Sparkfun Product #8606](https://www.sparkfun.com/products/8606)) |
@@ -26,7 +26,7 @@ The primary hardware platform for the vehicle is a Pololu A-Star 32U4 Robot Cont
 | Quantity | Description          |
 | :-------:|:---------------------|
 | 1  | Pololu A-Star 32U4 Robot Controller LV ([Pololu Product #3117](https://www.pololu.com/product/3117)) |
-| 1  | BLE Nano ([Redbear Lab](http://redbearlab.com/blenano) |
+| 1  | BLE Nano ([Redbear Lab](http://redbearlab.com/blenano)) |
 | 1  | Acrylic Sheet 12x12 (Vehicle Frame) |
 | 2  | 25Dx52L (47:1) 6V Gearmotor with 48 CPR Encoder ([Pololu Product #2676](https://www.pololu.com/product/2676)|
 | 1  | 25D Metal Gearmotor Bracket Pair ([Pololu Product #2676](https://www.pololu.com/product/2676))|
